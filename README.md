@@ -118,7 +118,9 @@ Run `aki <command> --help` for any of these.
 | `aki ls` | list tasks and their status |
 | `aki start <task>` | start or resume a task in the terminal |
 | `aki go <task>` | attach to a running task |
-| `aki stop <task>` | pause the agent, keep all work |
+| `aki stop <task>` | pause the agent, committing anything uncommitted so no work is stranded |
+| `aki t wait <task> --until <state>` | block until the task is waiting, idle, done or stopped |
+| `aki t send <task> "<text>"` | send the task's agent its next prompt |
 | `aki diff <task> [--stat]` | diff across all the task's repos |
 | `aki merge <task> [branch]` | merge the task's branches, leave it open |
 | `aki done <task> [branch]` | merge, then mark the task done |
@@ -180,8 +182,14 @@ Run `aki <command> --help` for any of these.
 
 ```toml
 [defaults]
-agent = "claude"        # default agent profile
-branch_prefix = "aki"   # task branches are <prefix>/<task>
+agent = "claude"          # default agent profile
+branch_prefix = "aki"     # task branches are <prefix>/<task>
+checkpoint_on_stop = true # commit uncommitted work when `aki stop` pauses a task
+
+[defaults.hooks]
+# Run when a browser-driven agent stops working — it finished a turn, or it is
+# blocked on a question. $AKI_AGENT_STATE says which; once per transition.
+on_agent_idle = ['notify-send "aki: $AKI_TASK is $AKI_AGENT_STATE"']
 
 [[agent_profiles]]
 name = "claude"
@@ -193,6 +201,24 @@ command = "codex"
 ```
 
 Pick a profile per task with `aki t new <name> --agent codex`.
+
+## Running tasks from tasks
+
+An agent has a shell, and `aki` is on it — so an agent can hand work to another
+task and wait for it. `aki t wait` answers with an exit code (`0` it happened,
+`2` timed out, `3` it never will), which is what lets a chain report a problem
+instead of hanging:
+
+```bash
+aki t new deploy-fix --notes "Fix the failing deploy check."
+aki web deploy-fix                                  # starts the agent on the brief
+aki t wait deploy-fix --until waiting --timeout 1800 || exit 1
+aki diff deploy-fix --stat
+aki t send deploy-fix "Looks right. Run the tests and report."
+```
+
+`--until waiting` covers both ways an agent stops: blocked on a question, and
+finished a turn. The `on_agent_idle` hook fires on exactly the same moments.
 
 ## Source
 
