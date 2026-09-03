@@ -33,17 +33,17 @@ to `~/.local/bin`, and copies aki's Claude Code skills into `~/.claude/skills`.
 | `AKI_SKILLS_DIR` | `~/.claude/skills` | where the skills go |
 | `AKI_NO_SKILLS` | — | set to `1` to skip skills |
 
-Prefer to do it by hand? Download `aki-<target>.tar.gz` from the release, verify it
+Prefer to do it by hand? Download `aki-<platform>.tar.gz` from the release, verify it
 against the published `.sha256`, and move `aki` onto your `PATH`.
 
 ### Platforms
 
-| Target | Status |
+| Platform | Status |
 |---|---|
-| `x86_64-unknown-linux-gnu` | published |
-| `aarch64-unknown-linux-gnu` | not yet built |
-| `aarch64-apple-darwin` | not yet built |
-| `x86_64-apple-darwin` | not yet built |
+| `linux-x64` | published |
+| `linux-arm64` | not yet built |
+| `macos-arm64` | not yet built |
+| `macos-x64` | not yet built |
 
 The installer already knows all four; it will tell you clearly if a release has no asset
 for your platform yet.

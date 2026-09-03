@@ -58,25 +58,27 @@ install_binary() {
 OS="$(uname -s)"
 ARCH="$(uname -m)"
 
+# Friendly platform names, matching the release assets (package.sh maps the
+# build triples to these same names).
 case "$OS-$ARCH" in
-    Linux-x86_64)            TRIPLE="x86_64-unknown-linux-gnu" ;;
-    Linux-aarch64|Linux-arm64) TRIPLE="aarch64-unknown-linux-gnu" ;;
-    Darwin-x86_64)           TRIPLE="x86_64-apple-darwin" ;;
-    Darwin-arm64)            TRIPLE="aarch64-apple-darwin" ;;
+    Linux-x86_64)            PLATFORM="linux-x64" ;;
+    Linux-aarch64|Linux-arm64) PLATFORM="linux-arm64" ;;
+    Darwin-x86_64)           PLATFORM="macos-x64" ;;
+    Darwin-arm64)            PLATFORM="macos-arm64" ;;
     *) error "unsupported platform: $OS $ARCH" ;;
 esac
 
-ASSET="aki-$TRIPLE.tar.gz"
+ASSET="aki-$PLATFORM.tar.gz"
 
 # The version-free asset name is what lets /releases/latest/download/ resolve
 # without asking the API which release is current.
 if [ -n "$VERSION" ]; then
     VERSION="${VERSION#v}"
     BASE="https://github.com/$REPO/releases/download/v$VERSION"
-    info "installing aki v$VERSION for $TRIPLE"
+    info "installing aki v$VERSION for $PLATFORM"
 else
     BASE="https://github.com/$REPO/releases/latest/download"
-    info "installing the latest aki for $TRIPLE"
+    info "installing the latest aki for $PLATFORM"
 fi
 
 # --- Download ---------------------------------------------------------------
@@ -86,7 +88,7 @@ trap 'rm -rf "$TMP"' EXIT
 
 if ! fetch "$BASE/$ASSET" "$TMP/$ASSET"; then
     echo "" >&2
-    echo "  No published binary for $TRIPLE${VERSION:+ at v$VERSION}." >&2
+    echo "  No published binary for $PLATFORM${VERSION:+ at v$VERSION}." >&2
     echo "  See https://github.com/$REPO/releases for what is available." >&2
     error "download failed: $BASE/$ASSET"
 fi
@@ -108,8 +110,8 @@ else
 fi
 
 tar -xzf "$TMP/$ASSET" -C "$TMP"
-PKG="$TMP/aki-$TRIPLE"
-[ -x "$PKG/aki" ] || error "archive did not contain aki-$TRIPLE/aki"
+PKG="$TMP/aki-$PLATFORM"
+[ -x "$PKG/aki" ] || error "archive did not contain aki-$PLATFORM/aki"
 
 # --- Install the binary -----------------------------------------------------
 
